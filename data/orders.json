@@ -1,0 +1,17 @@
+[
+  {
+    "orderId": 1776409947371,
+    "tableId": "2",
+    "items": [
+      {
+        "id": 1,
+        "name": "1번 메뉴",
+        "price": 5000,
+        "quantity": 1
+      }
+    ],
+    "totalPrice": 5000,
+    "createdAt": "2026. 4. 17. PM 4:12:27",
+    "status": "접수됨"
+  }
+]
