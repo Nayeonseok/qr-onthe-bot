@@ -65,7 +65,10 @@ export async function GET() {
   } catch (error) {
     console.error("GET /api/orders error:", error);
     return Response.json(
-      { message: "주문 목록을 불러오지 못했습니다." },
+      {
+        message: "주문 목록을 불러오지 못했습니다.",
+        debug: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }
@@ -114,7 +117,10 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("POST /api/orders error:", error);
     return Response.json(
-      { message: "주문 저장 중 오류가 발생했습니다." },
+      {
+        message: "주문 저장 중 오류가 발생했습니다.",
+        debug: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }
@@ -161,7 +167,56 @@ export async function PATCH(request: Request) {
   } catch (error) {
     console.error("PATCH /api/orders error:", error);
     return Response.json(
-      { message: "주문 상태 변경 중 오류가 발생했습니다." },
+      {
+        message: "주문 상태 변경 중 오류가 발생했습니다.",
+        debug: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    await ensureOrdersTable();
+
+    const { searchParams } = new URL(request.url);
+    const orderId = searchParams.get("orderId");
+
+    if (!orderId) {
+      return Response.json(
+        { message: "orderId가 없습니다." },
+        { status: 400 }
+      );
+    }
+
+    const result = await pool.query(
+      `
+      DELETE FROM orders
+      WHERE order_id = $1
+      RETURNING order_id
+      `,
+      [orderId]
+    );
+
+    if (result.rowCount === 0) {
+      return Response.json(
+        { message: "삭제할 주문을 찾을 수 없습니다." },
+        { status: 404 }
+      );
+    }
+
+    return Response.json(
+      { message: "완료 주문이 삭제되었습니다." },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("DELETE /api/orders error:", error);
+    return Response.json(
+      {
+        message: "완료 주문 삭제 중 오류가 발생했습니다.",
+        debug: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }

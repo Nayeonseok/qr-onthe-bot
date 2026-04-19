@@ -70,6 +70,25 @@ export default function AdminPage() {
     }
   };
 
+  const deleteCompletedOrder = async (orderId: string) => {
+    try {
+      const response = await fetch(`/api/orders?orderId=${orderId}`, {
+        method: "DELETE",
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        alert(result.message || "삭제에 실패했습니다.");
+        return;
+      }
+
+      setOrders((prev) => prev.filter((order) => order.orderId !== orderId));
+    } catch {
+      alert("서버와 통신 중 오류가 발생했습니다.");
+    }
+  };
+
   const activeOrders = orders.filter((order) => order.status !== "완료");
   const completedOrders = orders.filter((order) => order.status === "완료");
 
@@ -197,9 +216,20 @@ export default function AdminPage() {
                       ))}
                     </ul>
 
-                    <div style={{ fontWeight: "bold" }}>
+                    <div style={{ fontWeight: "bold", marginBottom: "16px" }}>
                       총 금액: {order.totalPrice.toLocaleString()}원
                     </div>
+
+                    <button
+                      onClick={() => deleteCompletedOrder(order.orderId)}
+                      style={{
+                        padding: "10px 16px",
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      삭제
+                    </button>
                   </div>
                 ))}
               </div>
