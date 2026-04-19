@@ -12,7 +12,7 @@ type CartItem = {
 type OrderStatus = "접수됨" | "완료";
 
 type OrderData = {
-  orderId: number;
+  orderId: string;
   tableId: string;
   items: CartItem[];
   totalPrice: number;
@@ -38,15 +38,9 @@ export default function AdminPage() {
 
   useEffect(() => {
     fetchOrders();
-
-    const intervalId = setInterval(() => {
-      fetchOrders();
-    }, 5000);
-
-    return () => clearInterval(intervalId);
   }, []);
 
-  const completeOrder = async (orderId: number) => {
+  const completeOrder = async (orderId: string) => {
     try {
       const response = await fetch("/api/orders", {
         method: "PATCH",
@@ -76,25 +70,6 @@ export default function AdminPage() {
     }
   };
 
-  const deleteCompletedOrder = async (orderId: number) => {
-  try {
-    const response = await fetch(`/api/orders?orderId=${orderId}`, {
-      method: "DELETE",
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      alert(result.message || "삭제에 실패했습니다.");
-      return;
-    }
-
-    setOrders((prev) => prev.filter((order) => order.orderId !== orderId));
-  } catch {
-    alert("서버와 통신 중 오류가 발생했습니다.");
-  }
-};
-
   const activeOrders = orders.filter((order) => order.status !== "완료");
   const completedOrders = orders.filter((order) => order.status === "완료");
 
@@ -109,9 +84,18 @@ export default function AdminPage() {
     >
       <h1 style={{ fontSize: "32px", marginBottom: "24px" }}>관리자 페이지</h1>
 
-      <p style={{ marginBottom: "24px", color: "#ccc" }}>
-        5초마다 자동으로 새로고침됩니다.
-      </p>
+      <div style={{ marginBottom: "24px" }}>
+        <button
+          onClick={fetchOrders}
+          style={{
+            padding: "10px 16px",
+            borderRadius: "8px",
+            cursor: "pointer",
+          }}
+        >
+          새로고침
+        </button>
+      </div>
 
       {loading ? (
         <p>주문 목록을 불러오는 중입니다...</p>
@@ -213,20 +197,9 @@ export default function AdminPage() {
                       ))}
                     </ul>
 
-                    <div style={{ fontWeight: "bold", marginBottom: "16px" }}>
-  총 금액: {order.totalPrice.toLocaleString()}원
-</div>
-
-<button
-  onClick={() => deleteCompletedOrder(order.orderId)}
-  style={{
-    padding: "10px 16px",
-    borderRadius: "8px",
-    cursor: "pointer",
-  }}
->
-  삭제
-</button>
+                    <div style={{ fontWeight: "bold" }}>
+                      총 금액: {order.totalPrice.toLocaleString()}원
+                    </div>
                   </div>
                 ))}
               </div>

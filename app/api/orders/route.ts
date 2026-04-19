@@ -1,5 +1,4 @@
-import { promises as fs } from "fs";
-import path from "path";
+import pool from "../../../lib/db";
 
 export const runtime = "nodejs";
 
@@ -10,10 +9,10 @@ type CartItem = {
   quantity: number;
 };
 
-type OrderStatus = "접수됨" | "조리중" | "서빙중" | "완료";
+type OrderStatus = "접수됨" | "완료";
 
 type OrderData = {
-  orderId: number;
+  orderId: string;
   tableId: string;
   items: CartItem[];
   totalPrice: number;
@@ -21,36 +20,50 @@ type OrderData = {
   status: OrderStatus;
 };
 
-const filePath = path.join(process.cwd(), "data", "orders.json");
-
-async function readOrders(): Promise<OrderData[]> {
-  try {
-    const data = await fs.readFile(filePath, "utf-8");
-    return JSON.parse(data);
-  } catch (error: unknown) {
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "code" in error &&
-      error.code === "ENOENT"
-    ) {
-      await fs.mkdir(path.dirname(filePath), { recursive: true });
-      await fs.writeFile(filePath, "[]", "utf-8");
-      return [];
-    }
-    throw error;
-  }
+async function ensureOrdersTable() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS orders (
+      order_id TEXT PRIMARY KEY,
+      table_id TEXT NOT NULL,
+      items JSONB NOT NULL,
+      total_price INTEGER NOT NULL,
+      status TEXT NOT NULL DEFAULT '접수됨',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
 }
 
-async function writeOrders(orders: OrderData[]) {
-  await fs.writeFile(filePath, JSON.stringify(orders, null, 2), "utf-8");
+function formatRow(row: {
+  order_id: string;
+  table_id: string;
+  items: CartItem[];
+  total_price: number;
+  status: OrderStatus;
+  created_at: string | Date;
+}): OrderData {
+  return {
+    orderId: row.order_id,
+    tableId: row.table_id,
+    items: row.items,
+    totalPrice: row.total_price,
+    status: row.status,
+    createdAt: new Date(row.created_at).toLocaleString("ko-KR"),
+  };
 }
 
 export async function GET() {
   try {
-    const orders = await readOrders();
-    return Response.json(orders, { status: 200 });
-  } catch {
+    await ensureOrdersTable();
+
+    const result = await pool.query(`
+      SELECT order_id, table_id, items, total_price, status, created_at
+      FROM orders
+      ORDER BY created_at DESC
+    `);
+
+    return Response.json(result.rows.map(formatRow), { status: 200 });
+  } catch (error) {
+    console.error("GET /api/orders error:", error);
     return Response.json(
       { message: "주문 목록을 불러오지 못했습니다." },
       { status: 500 }
@@ -60,6 +73,8 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    await ensureOrdersTable();
+
     const body = await request.json();
     const { tableId, items, totalPrice } = body;
 
@@ -70,25 +85,34 @@ export async function POST(request: Request) {
       );
     }
 
-    const orders = await readOrders();
+    const orderId = Date.now().toString();
 
-    const newOrder: OrderData = {
-      orderId: Date.now(),
-      tableId,
-      items,
-      totalPrice,
-      createdAt: new Date().toLocaleString("ko-KR"),
-      status: "접수됨",
-    };
+    await pool.query(
+      `
+      INSERT INTO orders (order_id, table_id, items, total_price, status)
+      VALUES ($1, $2, $3::jsonb, $4, $5)
+      `,
+      [orderId, tableId, JSON.stringify(items), totalPrice, "접수됨"]
+    );
 
-    orders.push(newOrder);
-    await writeOrders(orders);
+    const inserted = await pool.query(
+      `
+      SELECT order_id, table_id, items, total_price, status, created_at
+      FROM orders
+      WHERE order_id = $1
+      `,
+      [orderId]
+    );
 
     return Response.json(
-      { message: "주문이 저장되었습니다.", order: newOrder },
+      {
+        message: "주문이 저장되었습니다.",
+        order: formatRow(inserted.rows[0]),
+      },
       { status: 201 }
     );
-  } catch {
+  } catch (error) {
+    console.error("POST /api/orders error:", error);
     return Response.json(
       { message: "주문 저장 중 오류가 발생했습니다." },
       { status: 500 }
@@ -98,6 +122,8 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
+    await ensureOrdersTable();
+
     const body = await request.json();
     const { orderId, status } = body;
 
@@ -108,63 +134,34 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const orders = await readOrders();
-    const targetIndex = orders.findIndex((order) => order.orderId === orderId);
+    const result = await pool.query(
+      `
+      UPDATE orders
+      SET status = '완료'
+      WHERE order_id = $1
+      RETURNING order_id, table_id, items, total_price, status, created_at
+      `,
+      [orderId]
+    );
 
-    if (targetIndex === -1) {
+    if (result.rowCount === 0) {
       return Response.json(
         { message: "해당 주문을 찾을 수 없습니다." },
         { status: 404 }
       );
     }
 
-    orders[targetIndex].status = "완료";
-    await writeOrders(orders);
-
     return Response.json(
-      { message: "주문이 완료 처리되었습니다.", order: orders[targetIndex] },
+      {
+        message: "주문이 완료 처리되었습니다.",
+        order: formatRow(result.rows[0]),
+      },
       { status: 200 }
     );
-  } catch {
+  } catch (error) {
+    console.error("PATCH /api/orders error:", error);
     return Response.json(
       { message: "주문 상태 변경 중 오류가 발생했습니다." },
-      { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const orderId = Number(searchParams.get("orderId"));
-
-    if (!orderId) {
-      return Response.json(
-        { message: "삭제할 주문 ID가 없습니다." },
-        { status: 400 }
-      );
-    }
-
-    const orders = await readOrders();
-    const targetOrder = orders.find((order) => order.orderId === orderId);
-
-    if (!targetOrder) {
-      return Response.json(
-        { message: "해당 주문을 찾을 수 없습니다." },
-        { status: 404 }
-      );
-    }
-
-    const updatedOrders = orders.filter((order) => order.orderId !== orderId);
-    await writeOrders(updatedOrders);
-
-    return Response.json(
-      { message: "완료 주문이 삭제되었습니다." },
-      { status: 200 }
-    );
-  } catch {
-    return Response.json(
-      { message: "주문 삭제 중 오류가 발생했습니다." },
       { status: 500 }
     );
   }
