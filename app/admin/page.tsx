@@ -70,6 +70,7 @@ export default function AdminPage() {
     }
   };
 
+  
   const deleteCompletedOrder = async (orderId: string) => {
     try {
       const response = await fetch(`/api/orders?orderId=${orderId}`, {
