@@ -70,7 +70,6 @@ export default function AdminPage() {
     }
   };
 
-  
   const deleteCompletedOrder = async (orderId: string) => {
     try {
       const response = await fetch(`/api/orders?orderId=${orderId}`, {
@@ -99,7 +98,9 @@ export default function AdminPage() {
         maxWidth: "1000px",
         margin: "0 auto",
         padding: "40px 20px",
-        color: "white",
+        minHeight: "100vh",
+        backgroundColor: "#0f172a",
+        color: "#f8fafc",
       }}
     >
       <h1 style={{ fontSize: "32px", marginBottom: "24px" }}>관리자 페이지</h1>
@@ -110,6 +111,10 @@ export default function AdminPage() {
           style={{
             padding: "10px 16px",
             borderRadius: "8px",
+            border: "none",
+            backgroundColor: "#38bdf8",
+            color: "#0f172a",
+            fontWeight: "bold",
             cursor: "pointer",
           }}
         >
@@ -118,7 +123,7 @@ export default function AdminPage() {
       </div>
 
       {loading ? (
-        <p>주문 목록을 불러오는 중입니다...</p>
+        <p style={{ color: "#cbd5e1" }}>주문 목록을 불러오는 중입니다...</p>
       ) : (
         <>
           <section style={{ marginBottom: "50px" }}>
@@ -127,25 +132,28 @@ export default function AdminPage() {
             </h2>
 
             {activeOrders.length === 0 ? (
-              <p>현재 진행 중인 주문이 없습니다.</p>
+              <p style={{ color: "#cbd5e1" }}>현재 진행 중인 주문이 없습니다.</p>
             ) : (
               <div style={{ display: "grid", gap: "20px" }}>
                 {activeOrders.map((order) => (
                   <div
                     key={order.orderId}
                     style={{
-                      border: "1px solid #444",
+                      border: "1px solid #334155",
                       borderRadius: "12px",
                       padding: "20px",
-                      backgroundColor: "#111",
+                      backgroundColor: "#1e293b",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
                     }}
                   >
-                    <h3 style={{ marginBottom: "8px" }}>
+                    <h3 style={{ marginBottom: "8px", fontSize: "24px" }}>
                       {order.tableId}번 테이블 주문
                     </h3>
-                    <p style={{ marginBottom: "8px" }}>
+
+                    <p style={{ marginBottom: "8px", color: "#cbd5e1" }}>
                       주문 시간: {order.createdAt}
                     </p>
+
                     <p style={{ marginBottom: "16px" }}>
                       현재 상태: <strong>{order.status}</strong>
                     </p>
@@ -159,7 +167,13 @@ export default function AdminPage() {
                       ))}
                     </ul>
 
-                    <div style={{ fontWeight: "bold", marginBottom: "16px" }}>
+                    <div
+                      style={{
+                        fontWeight: "bold",
+                        marginBottom: "16px",
+                        fontSize: "18px",
+                      }}
+                    >
                       총 금액: {order.totalPrice.toLocaleString()}원
                     </div>
 
@@ -168,6 +182,10 @@ export default function AdminPage() {
                       style={{
                         padding: "10px 16px",
                         borderRadius: "8px",
+                        border: "none",
+                        backgroundColor: "#22c55e",
+                        color: "#ffffff",
+                        fontWeight: "bold",
                         cursor: "pointer",
                       }}
                     >
@@ -185,25 +203,28 @@ export default function AdminPage() {
             </h2>
 
             {completedOrders.length === 0 ? (
-              <p>완료된 주문이 없습니다.</p>
+              <p style={{ color: "#cbd5e1" }}>완료된 주문이 없습니다.</p>
             ) : (
               <div style={{ display: "grid", gap: "20px" }}>
                 {completedOrders.map((order) => (
                   <div
                     key={order.orderId}
                     style={{
-                      border: "1px solid #444",
+                      border: "1px solid #334155",
                       borderRadius: "12px",
                       padding: "20px",
-                      backgroundColor: "#1a1a1a",
+                      backgroundColor: "#111827",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
                     }}
                   >
-                    <h3 style={{ marginBottom: "8px" }}>
+                    <h3 style={{ marginBottom: "8px", fontSize: "22px" }}>
                       {order.tableId}번 테이블 주문
                     </h3>
-                    <p style={{ marginBottom: "8px" }}>
+
+                    <p style={{ marginBottom: "8px", color: "#cbd5e1" }}>
                       주문 시간: {order.createdAt}
                     </p>
+
                     <p style={{ marginBottom: "16px" }}>
                       상태: <strong>{order.status}</strong>
                     </p>
@@ -217,7 +238,13 @@ export default function AdminPage() {
                       ))}
                     </ul>
 
-                    <div style={{ fontWeight: "bold", marginBottom: "16px" }}>
+                    <div
+                      style={{
+                        fontWeight: "bold",
+                        marginBottom: "16px",
+                        fontSize: "18px",
+                      }}
+                    >
                       총 금액: {order.totalPrice.toLocaleString()}원
                     </div>
 
@@ -226,6 +253,10 @@ export default function AdminPage() {
                       style={{
                         padding: "10px 16px",
                         borderRadius: "8px",
+                        border: "none",
+                        backgroundColor: "#ef4444",
+                        color: "#ffffff",
+                        fontWeight: "bold",
                         cursor: "pointer",
                       }}
                     >
