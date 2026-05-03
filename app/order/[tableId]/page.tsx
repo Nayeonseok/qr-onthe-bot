@@ -112,14 +112,28 @@ export default function OrderPage() {
   };
 
   return (
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#020617",
+        padding: "20px",
+      }}
+    >
     <main
       style={{
-        maxWidth: "900px",
-        margin: "0 auto",
-        padding: "40px 20px",
-        minHeight: "100vh",
+        width: "min(100vw - 24px, 420px)",
+        aspectRatio: "9 / 16",
         backgroundColor: "#0f172a",
         color: "#f8fafc",
+        borderRadius: "24px",
+        border: "1px solid #334155",
+        boxShadow: "0 8px 24px rgba(0, 0, 0, 0.35)",
+        padding: "24px 16px",
+        overflowY: "auto",
+        boxSizing: "border-box",
       }}
     >
       <h1 style={{ fontSize: "32px", marginBottom: "8px" }}>주문 페이지</h1>
