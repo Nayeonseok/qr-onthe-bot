@@ -329,5 +329,6 @@ export default function OrderPage() {
         )}
       </section>
     </main>
+  </div>
   );
 }
