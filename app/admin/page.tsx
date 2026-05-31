@@ -1,6 +1,5 @@
 "use client";
 
-import { clear } from "console";
 import { useEffect, useState } from "react";
 
 type CartItem = {
@@ -26,6 +25,7 @@ type OrderData = {
 export default function AdminPage() {
   const [orders, setOrders] = useState<OrderData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshCountdown, setRefreshCountdown] = useState(5);
 
   const fetchOrders = async () => {
     try {
@@ -42,11 +42,19 @@ export default function AdminPage() {
   useEffect(() => {
     fetchOrders();
 
-    const interval = setInterval(() => {
+    const refreshInterval = setInterval(() => {
       fetchOrders();
+      setRefreshCountdown(5);
     }, 5000);
 
-    return () => clearInterval(interval);
+    const countdownInterval = setInterval(() => {
+      setRefreshCountdown((prev) => (prev === 1 ? 5 : prev - 1));
+    }, 1000);
+
+    return () => {
+      clearInterval(refreshInterval);
+      clearInterval(countdownInterval);
+    };
   }, []);
 
   const completeOrder = async (orderId: string) => {
@@ -74,6 +82,7 @@ export default function AdminPage() {
           order.orderId === orderId ? { ...order, status: "완료" } : order
         )
       );
+      setRefreshCountdown(5);
     } catch {
       alert("서버와 통신 중 오류가 발생했습니다.");
     }
@@ -93,6 +102,7 @@ export default function AdminPage() {
       }
 
       setOrders((prev) => prev.filter((order) => order.orderId !== orderId));
+      setRefreshCountdown(5);
     } catch {
       alert("서버와 통신 중 오류가 발생했습니다.");
     }
@@ -128,21 +138,43 @@ export default function AdminPage() {
             </p>
           </div>
 
-          <button
-            onClick={fetchOrders}
+          <div
             style={{
-              padding: "12px 18px",
-              borderRadius: "12px",
-              border: "none",
-              backgroundColor: "#38bdf8",
-              color: "#0f172a",
-              fontWeight: "bold",
-              cursor: "pointer",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+              flexWrap: "wrap",
             }}
           >
-            새로고침
-          </button>
+            <button
+              onClick={() => {
+                fetchOrders();
+                setRefreshCountdown(5);
+              }}
+              style={{
+                padding: "12px 18px",
+                borderRadius: "12px",
+                border: "none",
+                backgroundColor: "#38bdf8",
+                color: "#0f172a",
+                fontWeight: "bold",
+                cursor: "pointer",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+              }}
+            >
+              새로고침
+            </button>
+
+            <span
+              style={{
+                color: "#64748b",
+                fontSize: "15px",
+                fontWeight: 500,
+              }}
+            >
+              다음 자동 새로고침까지 {refreshCountdown}초
+            </span>
+          </div>
         </div>
 
         {loading ? (
@@ -279,11 +311,23 @@ export default function AdminPage() {
                               {item.name}
                             </div>
 
-                            <div style={{ color: "#475569", fontSize: "15px", marginBottom: "4px" }}>
+                            <div
+                              style={{
+                                color: "#475569",
+                                fontSize: "15px",
+                                marginBottom: "4px",
+                              }}
+                            >
                               수량: {item.quantity}
                             </div>
 
-                            <div style={{ color: "#475569", fontSize: "15px", marginBottom: "4px" }}>
+                            <div
+                              style={{
+                                color: "#475569",
+                                fontSize: "15px",
+                                marginBottom: "4px",
+                              }}
+                            >
                               옵션: {item.optionSummary || "옵션 없음"}
                             </div>
 
@@ -451,11 +495,23 @@ export default function AdminPage() {
                               {item.name}
                             </div>
 
-                            <div style={{ color: "#475569", fontSize: "15px", marginBottom: "4px" }}>
+                            <div
+                              style={{
+                                color: "#475569",
+                                fontSize: "15px",
+                                marginBottom: "4px",
+                              }}
+                            >
                               수량: {item.quantity}
                             </div>
 
-                            <div style={{ color: "#475569", fontSize: "15px", marginBottom: "4px" }}>
+                            <div
+                              style={{
+                                color: "#475569",
+                                fontSize: "15px",
+                                marginBottom: "4px",
+                              }}
+                            >
                               옵션: {item.optionSummary || "옵션 없음"}
                             </div>
 
