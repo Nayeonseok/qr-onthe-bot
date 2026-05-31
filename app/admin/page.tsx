@@ -7,6 +7,8 @@ type CartItem = {
   name: string;
   price: number;
   quantity: number;
+  optionSummary?: string;
+  image?: string;
 };
 
 type OrderStatus = "접수됨" | "완료";
@@ -93,197 +95,411 @@ export default function AdminPage() {
   const completedOrders = orders.filter((order) => order.status === "완료");
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "#020617",
-        padding: "20px",
-    }}
-    >
     <main
       style={{
-        width: "min(100vw - 24px, 420px)",
-        aspectRatio: "9 / 16",
-        backgroundColor: "#0f172a",
-        color: "#f8fafc",
-        borderRadius: "24px",
-        border: "1px solid #334155",
-        boxShadow: "0 8px 24px rgba(0, 0, 0, 0.35)",
-        padding: "24px 16px",
-        overflowY: "auto",
-        boxSizing: "border-box",
+        minHeight: "100vh",
+        backgroundColor: "#f8fafc",
+        color: "#0f172a",
+        padding: "32px 20px 60px",
       }}
     >
-      <h1 style={{ fontSize: "32px", marginBottom: "24px" }}>관리자 페이지</h1>
-
-      <div style={{ marginBottom: "24px" }}>
-        <button
-          onClick={fetchOrders}
+      <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
+        <div
           style={{
-            padding: "10px 16px",
-            borderRadius: "8px",
-            border: "none",
-            backgroundColor: "#38bdf8",
-            color: "#0f172a",
-            fontWeight: "bold",
-            cursor: "pointer",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: "12px",
+            marginBottom: "28px",
+            flexWrap: "wrap",
           }}
         >
-          새로고침
-        </button>
+          <div>
+            <h1 style={{ fontSize: "32px", marginBottom: "8px" }}>관리자 페이지</h1>
+            <p style={{ color: "#64748b", fontSize: "16px", margin: 0 }}>
+              주문 현황을 확인하고 완료 처리할 수 있습니다.
+            </p>
+          </div>
+
+          <button
+            onClick={fetchOrders}
+            style={{
+              padding: "12px 18px",
+              borderRadius: "12px",
+              border: "none",
+              backgroundColor: "#38bdf8",
+              color: "#0f172a",
+              fontWeight: "bold",
+              cursor: "pointer",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+            }}
+          >
+            새로고침
+          </button>
+        </div>
+
+        {loading ? (
+          <div
+            style={{
+              backgroundColor: "#ffffff",
+              border: "1px solid #cbd5e1",
+              borderRadius: "16px",
+              padding: "24px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+            }}
+          >
+            <p style={{ color: "#64748b", margin: 0 }}>
+              주문 목록을 불러오는 중입니다...
+            </p>
+          </div>
+        ) : (
+          <>
+            <section style={{ marginBottom: "48px" }}>
+              <h2
+                style={{
+                  fontSize: "24px",
+                  marginBottom: "18px",
+                }}
+              >
+                진행 중 주문
+              </h2>
+
+              {activeOrders.length === 0 ? (
+                <div
+                  style={{
+                    backgroundColor: "#ffffff",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: "16px",
+                    padding: "24px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+                  }}
+                >
+                  <p style={{ color: "#64748b", margin: 0 }}>
+                    현재 진행 중인 주문이 없습니다.
+                  </p>
+                </div>
+              ) : (
+                <div style={{ display: "grid", gap: "20px" }}>
+                  {activeOrders.map((order) => (
+                    <div
+                      key={order.orderId}
+                      style={{
+                        border: "1px solid #cbd5e1",
+                        borderRadius: "16px",
+                        padding: "22px",
+                        backgroundColor: "#ffffff",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                          gap: "12px",
+                          marginBottom: "16px",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <div>
+                          <h3
+                            style={{
+                              margin: "0 0 8px 0",
+                              fontSize: "24px",
+                            }}
+                          >
+                            {order.tableId}번 테이블
+                          </h3>
+                          <p
+                            style={{
+                              margin: "0 0 6px 0",
+                              color: "#64748b",
+                              fontSize: "15px",
+                            }}
+                          >
+                            주문 시간: {order.createdAt}
+                          </p>
+                          <p
+                            style={{
+                              margin: 0,
+                              color: "#0f172a",
+                              fontSize: "15px",
+                            }}
+                          >
+                            상태: <strong>{order.status}</strong>
+                          </p>
+                        </div>
+
+                        <div
+                          style={{
+                            padding: "8px 12px",
+                            borderRadius: "999px",
+                            backgroundColor: "#e0f2fe",
+                            color: "#0369a1",
+                            fontWeight: "bold",
+                            fontSize: "14px",
+                          }}
+                        >
+                          진행 중
+                        </div>
+                      </div>
+
+                      <div
+                        style={{
+                          borderTop: "1px solid #e2e8f0",
+                          paddingTop: "16px",
+                          marginBottom: "18px",
+                        }}
+                      >
+                        {order.items.map((item, index) => (
+                          <div
+                            key={`${item.id}-${item.name}-${item.optionSummary ?? ""}-${index}`}
+                            style={{
+                              padding: "12px 0",
+                              borderBottom:
+                                index !== order.items.length - 1
+                                  ? "1px solid #e2e8f0"
+                                  : "none",
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontWeight: "bold",
+                                fontSize: "17px",
+                                marginBottom: "6px",
+                              }}
+                            >
+                              {item.name}
+                            </div>
+
+                            <div style={{ color: "#475569", fontSize: "15px", marginBottom: "4px" }}>
+                              수량: {item.quantity}
+                            </div>
+
+                            <div style={{ color: "#475569", fontSize: "15px", marginBottom: "4px" }}>
+                              옵션: {item.optionSummary || "옵션 없음"}
+                            </div>
+
+                            <div style={{ color: "#475569", fontSize: "15px" }}>
+                              금액: {(item.price * item.quantity).toLocaleString()}원
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          gap: "12px",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontWeight: "bold",
+                            fontSize: "20px",
+                          }}
+                        >
+                          총 금액: {order.totalPrice.toLocaleString()}원
+                        </div>
+
+                        <button
+                          onClick={() => completeOrder(order.orderId)}
+                          style={{
+                            padding: "12px 18px",
+                            borderRadius: "12px",
+                            border: "none",
+                            backgroundColor: "#22c55e",
+                            color: "#ffffff",
+                            fontWeight: "bold",
+                            cursor: "pointer",
+                          }}
+                        >
+                          완료
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section>
+              <h2
+                style={{
+                  fontSize: "24px",
+                  marginBottom: "18px",
+                }}
+              >
+                완료 주문 보관 목록
+              </h2>
+
+              {completedOrders.length === 0 ? (
+                <div
+                  style={{
+                    backgroundColor: "#ffffff",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: "16px",
+                    padding: "24px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+                  }}
+                >
+                  <p style={{ color: "#64748b", margin: 0 }}>
+                    완료된 주문이 없습니다.
+                  </p>
+                </div>
+              ) : (
+                <div style={{ display: "grid", gap: "20px" }}>
+                  {completedOrders.map((order) => (
+                    <div
+                      key={order.orderId}
+                      style={{
+                        border: "1px solid #cbd5e1",
+                        borderRadius: "16px",
+                        padding: "22px",
+                        backgroundColor: "#ffffff",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                          gap: "12px",
+                          marginBottom: "16px",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <div>
+                          <h3
+                            style={{
+                              margin: "0 0 8px 0",
+                              fontSize: "22px",
+                            }}
+                          >
+                            {order.tableId}번 테이블
+                          </h3>
+                          <p
+                            style={{
+                              margin: "0 0 6px 0",
+                              color: "#64748b",
+                              fontSize: "15px",
+                            }}
+                          >
+                            주문 시간: {order.createdAt}
+                          </p>
+                          <p
+                            style={{
+                              margin: 0,
+                              color: "#0f172a",
+                              fontSize: "15px",
+                            }}
+                          >
+                            상태: <strong>{order.status}</strong>
+                          </p>
+                        </div>
+
+                        <div
+                          style={{
+                            padding: "8px 12px",
+                            borderRadius: "999px",
+                            backgroundColor: "#dcfce7",
+                            color: "#166534",
+                            fontWeight: "bold",
+                            fontSize: "14px",
+                          }}
+                        >
+                          완료
+                        </div>
+                      </div>
+
+                      <div
+                        style={{
+                          borderTop: "1px solid #e2e8f0",
+                          paddingTop: "16px",
+                          marginBottom: "18px",
+                        }}
+                      >
+                        {order.items.map((item, index) => (
+                          <div
+                            key={`${item.id}-${item.name}-${item.optionSummary ?? ""}-${index}`}
+                            style={{
+                              padding: "12px 0",
+                              borderBottom:
+                                index !== order.items.length - 1
+                                  ? "1px solid #e2e8f0"
+                                  : "none",
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontWeight: "bold",
+                                fontSize: "17px",
+                                marginBottom: "6px",
+                              }}
+                            >
+                              {item.name}
+                            </div>
+
+                            <div style={{ color: "#475569", fontSize: "15px", marginBottom: "4px" }}>
+                              수량: {item.quantity}
+                            </div>
+
+                            <div style={{ color: "#475569", fontSize: "15px", marginBottom: "4px" }}>
+                              옵션: {item.optionSummary || "옵션 없음"}
+                            </div>
+
+                            <div style={{ color: "#475569", fontSize: "15px" }}>
+                              금액: {(item.price * item.quantity).toLocaleString()}원
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          gap: "12px",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontWeight: "bold",
+                            fontSize: "20px",
+                          }}
+                        >
+                          총 금액: {order.totalPrice.toLocaleString()}원
+                        </div>
+
+                        <button
+                          onClick={() => deleteCompletedOrder(order.orderId)}
+                          style={{
+                            padding: "12px 18px",
+                            borderRadius: "12px",
+                            border: "none",
+                            backgroundColor: "#ef4444",
+                            color: "#ffffff",
+                            fontWeight: "bold",
+                            cursor: "pointer",
+                          }}
+                        >
+                          삭제
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          </>
+        )}
       </div>
-
-      {loading ? (
-        <p style={{ color: "#cbd5e1" }}>주문 목록을 불러오는 중입니다...</p>
-      ) : (
-        <>
-          <section style={{ marginBottom: "50px" }}>
-            <h2 style={{ fontSize: "26px", marginBottom: "20px" }}>
-              진행 중 주문
-            </h2>
-
-            {activeOrders.length === 0 ? (
-              <p style={{ color: "#cbd5e1" }}>현재 진행 중인 주문이 없습니다.</p>
-            ) : (
-              <div style={{ display: "grid", gap: "20px" }}>
-                {activeOrders.map((order) => (
-                  <div
-                    key={order.orderId}
-                    style={{
-                      border: "1px solid #334155",
-                      borderRadius: "12px",
-                      padding: "20px",
-                      backgroundColor: "#1e293b",
-                      boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
-                    }}
-                  >
-                    <h3 style={{ marginBottom: "8px", fontSize: "24px" }}>
-                      {order.tableId}번 테이블 주문
-                    </h3>
-
-                    <p style={{ marginBottom: "8px", color: "#cbd5e1" }}>
-                      주문 시간: {order.createdAt}
-                    </p>
-
-                    <p style={{ marginBottom: "16px" }}>
-                      현재 상태: <strong>{order.status}</strong>
-                    </p>
-
-                    <ul style={{ paddingLeft: "20px", marginBottom: "16px" }}>
-                      {order.items.map((item) => (
-                        <li key={item.id} style={{ marginBottom: "8px" }}>
-                          {item.name} / 수량: {item.quantity} / 금액:{" "}
-                          {(item.price * item.quantity).toLocaleString()}원
-                        </li>
-                      ))}
-                    </ul>
-
-                    <div
-                      style={{
-                        fontWeight: "bold",
-                        marginBottom: "16px",
-                        fontSize: "18px",
-                      }}
-                    >
-                      총 금액: {order.totalPrice.toLocaleString()}원
-                    </div>
-
-                    <button
-                      onClick={() => completeOrder(order.orderId)}
-                      style={{
-                        padding: "10px 16px",
-                        borderRadius: "8px",
-                        border: "none",
-                        backgroundColor: "#22c55e",
-                        color: "#ffffff",
-                        fontWeight: "bold",
-                        cursor: "pointer",
-                      }}
-                    >
-                      완료
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section>
-            <h2 style={{ fontSize: "26px", marginBottom: "20px" }}>
-              완료 주문 보관 목록
-            </h2>
-
-            {completedOrders.length === 0 ? (
-              <p style={{ color: "#cbd5e1" }}>완료된 주문이 없습니다.</p>
-            ) : (
-              <div style={{ display: "grid", gap: "20px" }}>
-                {completedOrders.map((order) => (
-                  <div
-                    key={order.orderId}
-                    style={{
-                      border: "1px solid #334155",
-                      borderRadius: "12px",
-                      padding: "20px",
-                      backgroundColor: "#111827",
-                      boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
-                    }}
-                  >
-                    <h3 style={{ marginBottom: "8px", fontSize: "22px" }}>
-                      {order.tableId}번 테이블 주문
-                    </h3>
-
-                    <p style={{ marginBottom: "8px", color: "#cbd5e1" }}>
-                      주문 시간: {order.createdAt}
-                    </p>
-
-                    <p style={{ marginBottom: "16px" }}>
-                      상태: <strong>{order.status}</strong>
-                    </p>
-
-                    <ul style={{ paddingLeft: "20px", marginBottom: "16px" }}>
-                      {order.items.map((item) => (
-                        <li key={item.id} style={{ marginBottom: "8px" }}>
-                          {item.name} / 수량: {item.quantity} / 금액:{" "}
-                          {(item.price * item.quantity).toLocaleString()}원
-                        </li>
-                      ))}
-                    </ul>
-
-                    <div
-                      style={{
-                        fontWeight: "bold",
-                        marginBottom: "16px",
-                        fontSize: "18px",
-                      }}
-                    >
-                      총 금액: {order.totalPrice.toLocaleString()}원
-                    </div>
-
-                    <button
-                      onClick={() => deleteCompletedOrder(order.orderId)}
-                      style={{
-                        padding: "10px 16px",
-                        borderRadius: "8px",
-                        border: "none",
-                        backgroundColor: "#ef4444",
-                        color: "#ffffff",
-                        fontWeight: "bold",
-                        cursor: "pointer",
-                      }}
-                    >
-                      삭제
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-        </>
-      )}
     </main>
-  </div>  
   );
 }

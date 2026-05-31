@@ -7,6 +7,8 @@ type CartItem = {
   name: string;
   price: number;
   quantity: number;
+  optionSummary?: string;
+  image?: string;
 };
 
 type OrderStatus = "접수됨" | "완료";
