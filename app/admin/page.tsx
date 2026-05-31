@@ -1,5 +1,6 @@
 "use client";
 
+import { clear } from "console";
 import { useEffect, useState } from "react";
 
 type CartItem = {
@@ -40,6 +41,12 @@ export default function AdminPage() {
 
   useEffect(() => {
     fetchOrders();
+
+    const interval = setInterval(() => {
+      fetchOrders();
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const completeOrder = async (orderId: string) => {
